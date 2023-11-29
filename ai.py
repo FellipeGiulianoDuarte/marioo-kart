@@ -1,5 +1,4 @@
 import math
-import time
 import pygame
 from boost import Boost
 from road import Road
@@ -50,15 +49,14 @@ class AI():
             break
 
         next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
+        print(next_checkpoint_position)
 
         # Use A* pathfinding to find the shortest path to the next checkpoint
-        path = self.a_star(string, self.kart.position, next_checkpoint_position, self.h, self.neighbors, self.cost)
-
-        print(f"Path: {path}")
-        
+        path = self.a_star(string, self.kart.position, next_checkpoint_position, self.h, self.neighbors)
         # Determine the angle and movement based on the path
         if path:
-            next_point = path[0]
+            next_point = path[1]
+            print(path[1])
             relative_x = next_point[0] - self.kart.position[0]
             relative_y = next_point[1] - self.kart.position[1]
             next_point_angle = math.atan2(relative_y, relative_x)
@@ -80,7 +78,7 @@ class AI():
             return {pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False}
 
 
-    def a_star(self, string, start, goal, h, neighbors, cost):
+    def a_star(self, string, start, goal, h, neighbors):
         def reconstruct_path(cameFrom, current):
             total_path = [current]
             while current in cameFrom:
@@ -105,15 +103,12 @@ class AI():
         fScore = {tuple(start): h(start, goal)}
 
         while openSet:
-            time.sleep(0.1)
             _, current = heappop(openSet)
-            print(f"Current: {current}, Goal: {goal}")
-            if current == goal:
-                return reconstruct_path(cameFrom, current)
+            if tuple(current) == tuple(goal):
+                return reconstruct_path(cameFrom, tuple(current))
 
             for neighbor in neighbors(string, current):
-                # d(current, neighbor) is the weight of the edge from current to neighbor
-                tentative_gScore = gScore[tuple(current)] + cost(current, neighbor)
+                tentative_gScore = gScore[tuple(current)] + 1
                 if tentative_gScore < gScore.get(tuple(neighbor), float('inf')):
                     # This path to neighbor is better than any previous one. Record it!
                     cameFrom[tuple(neighbor)] = tuple(current)
@@ -125,21 +120,15 @@ class AI():
         return None  # failure
 
     def h(self, current, goal):
-        # Replace with your heuristic function
-        return math.dist(current, goal)
+        return abs(int(current[0]) - int(goal[0])) + abs(int(current[1]) - int(goal[1]))
 
     def neighbors(self, string, current):
         x, y = current
-        possible_neighbors = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        possible_neighbors = [(int(x + 1), int(y)), (int(x - 1), int(y)), (int(x), int(y + 1)), (int(x), int(y - 1))]
         
         # Filter valid neighbors based on track elements
         valid_neighbors = [
             (nx, ny) for nx, ny in possible_neighbors
             if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
         ]
-        print(f"valid neighbors: {valid_neighbors}")
         return valid_neighbors
-
-    def cost(self, current, neighbor):
-        # Replace with your cost function
-        return math.dist(current, neighbor)
