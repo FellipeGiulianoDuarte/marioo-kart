@@ -110,9 +110,7 @@ class AI():
             if tuple(current) == tuple(goal):
                 return reconstruct_path(cameFrom, tuple(current))
 
-            # Limit the number of neighbors to consider
-            max_neighbors = 100
-            for neighbor in neighbors(string, current)[:max_neighbors]:
+            for neighbor in neighbors(string, current):
                 tentative_gScore = gScore[tuple(current)] + 1
                 if tentative_gScore < gScore.get(tuple(neighbor), float('inf')):
                     # This path to neighbor is better than any previous one. Record it!
@@ -131,26 +129,11 @@ class AI():
 
     def neighbors(self, string, current):
         x, y = current
-
-        possible_neighbors = [
-            (x + 1, y),
-            (x - 1, y),
-            (x, y + 1),
-            (x, y - 1),
-            (x + 1, y + 1),
-            (x - 1, y + 1),
-            (x + 1, y - 1),
-            (x - 1, y - 1)
-        ]
+        possible_neighbors = [(int(x + 1), int(y)), (int(x - 1), int(y)), (int(x), int(y + 1)), (int(x), int(y - 1))]
 
         # Filter valid neighbors based on track elements
-        valid_neighbors = []
-        for new_x, new_y in possible_neighbors:
-            track_element, _ = self.kart.get_track_element(string, new_x, new_y)
-            if track_element == Checkpoint or track_element == Road or track_element == Boost:
-                valid_neighbors.append((new_x, new_y))
-
-        for nx, ny in valid_neighbors:
-            track_element_class = self.kart.get_track_element(string, nx, ny)[0]
-            # print(f"Class of track element at ({nx}, {ny}): {track_element_class}")
+        valid_neighbors = [
+            (nx, ny) for nx, ny in possible_neighbors
+            if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
+        ]
         return valid_neighbors

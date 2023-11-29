@@ -5,10 +5,10 @@ from kart import Kart
 
 # La chaine de caractere decrivant le terrain
 string = """GGGGGGGGGGGGGGGGGGGGGGGGGG
-            GRRGRRRCRRRRRRRRRBRRRRRRRG
-            GRRGRRRCRRRRRRRRRBRRRRRRRG
-            GRRGRGRCRRRRRRRRRRRRRRRRRG
-            GRRRRGRCRRRRRRRRRRRRRRRRRG
+            GRRRRRRCRRRRRRRRRBRRRRRRRG
+            GRRRRRRCRRRRRRRRRBRRRRRRRG
+            GRRRRRRCRRRRRRRRRRRRRRRRRG
+            GRRRRRRCRRRRRRRRRRRRRRRRRG
             GGGGGGGGGGGGGGGGGGGGGRRRRG
             GGGGGGGGGGGGGGGGGGGGGRRRRG
             GRRRRGGGGGGGGGGGGGGGGRRRRG
@@ -22,7 +22,7 @@ string = """GGGGGGGGGGGGGGGGGGGGGGGGGG
             GGGGGGGGGGGGGGGGGGGGGGGGGG"""
 
 # La position et l'orientation initiale du kart
-initial_position = [349, 75]
+initial_position = [75, 75]
 initial_angle = 0
 
 controller = AI()  # ou AI()
