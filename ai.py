@@ -1,4 +1,5 @@
 import math
+import time
 import pygame
 from boost import Boost
 from road import Road
@@ -43,7 +44,6 @@ class AI():
                 track_char = row[col_index]
                 
                 if track_char == char:
-                    # print(f"Found '{char}' at row {row_index}, column {col_index}")
                     break
             else:
                 continue
@@ -51,20 +51,13 @@ class AI():
 
         next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
 
-        # print(f"Next Checkpoint ID: {self.kart.next_checkpoint_id}")
-        # print(f"Next Checkpoint Char: {char}")
-        # print(f"Next Checkpoint Position: {next_checkpoint_position}")
-    
         # Use A* pathfinding to find the shortest path to the next checkpoint
-        path = self.a_star_pathfinding(string, self.kart.position, next_checkpoint_position)
+        path = self.a_star(string, self.kart.position, next_checkpoint_position, self.h, self.neighbors, self.cost)
 
         print(f"Path: {path}")
         
         # Determine the angle and movement based on the path
         if path:
-            # print(f"Relative Angle: {relative_angle}")
-            # print(f"Command: {command}")
-            # Calculate angle towards the next point in the path
             next_point = path[0]
             relative_x = next_point[0] - self.kart.position[0]
             relative_y = next_point[1] - self.kart.position[1]
@@ -86,59 +79,67 @@ class AI():
             # If no path is found, stop moving
             return {pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False}
 
-    def a_star_pathfinding(self, string, start, goal):
-        """
-        A* pathfinding algorithm to find the shortest path on the track, avoiding obstacles.
 
-        :param string: The string describing the track
-        :param start: The starting position [x, y]
-        :param goal: The goal position [x, y]
-        :return: A list of points representing the shortest path
-        """
+    def a_star(self, string, start, goal, h, neighbors, cost):
+        def reconstruct_path(cameFrom, current):
+            total_path = [current]
+            while current in cameFrom:
+                current = cameFrom[current]
+                total_path.insert(0, current)
+            return total_path
+        
+        # The set of discovered nodes that may need to be (re-)expanded.
+        # Initially, only the start node is known.
+        # This is usually implemented as a min-heap or priority queue rather than a hash-set.
+        openSet = [(0, start)]
 
-        def heuristic(a, b):
-            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        # For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from the start
+        # to n currently known.
+        cameFrom = {}
 
-        def neighbors(point):
-            x, y = point
-            possible_neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
-            valid_neighbors = [
-                (nx, ny) for nx, ny in possible_neighbors
-                if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
-            ]
+        # For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
+        gScore = {tuple(start): 0}
 
-            # print(f"Point: {point}, Possible Neighbors: {possible_neighbors}")
-            for nx, ny in possible_neighbors:
-                track_class, _ = self.kart.get_track_element(string, nx, ny)
-                # print(f"Neighbor: ({nx}, {ny}), Track Class: {track_class}")
+        # For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
+        # how cheap a path could be from start to finish if it goes through n.
+        fScore = {tuple(start): h(start, goal)}
 
-            # print(f"Valid Neighbors: {valid_neighbors}")
-
-            return valid_neighbors
-
-        open_set = []
-        closed_set = set()
-        start_node = (start, None)
-        heappush(open_set, (0, start_node))
-
-        while open_set:
-            current_cost, (current, came_from) = heappop(open_set)
-            
-            # print(f"Current: {current}, Goal: {goal}")
-
+        while openSet:
+            time.sleep(0.1)
+            _, current = heappop(openSet)
+            print(f"Current: {current}, Goal: {goal}")
             if current == goal:
-                path = [current]
-                while came_from:
-                    path.append(came_from[0])
-                    current, came_from = came_from
-                return path[::-1]
+                return reconstruct_path(cameFrom, current)
 
-            closed_set.add(tuple(current))
+            for neighbor in neighbors(string, current):
+                # d(current, neighbor) is the weight of the edge from current to neighbor
+                tentative_gScore = gScore[tuple(current)] + cost(current, neighbor)
+                if tentative_gScore < gScore.get(tuple(neighbor), float('inf')):
+                    # This path to neighbor is better than any previous one. Record it!
+                    cameFrom[tuple(neighbor)] = tuple(current)
+                    gScore[tuple(neighbor)] = tentative_gScore
+                    fScore[tuple(neighbor)] = tentative_gScore + h(neighbor, goal)
+                    heappush(openSet, (fScore[tuple(neighbor)], tuple(neighbor)))
 
-            for neighbor in neighbors(current):
-                if neighbor not in closed_set:
-                    new_cost = current_cost + 1
-                    heuristic_cost = new_cost + heuristic(neighbor, goal)
-                    heappush(open_set, (heuristic_cost, (neighbor, current)))
+        # Open set is empty but goal was never reached
+        return None  # failure
 
-        return []
+    def h(self, current, goal):
+        # Replace with your heuristic function
+        return math.dist(current, goal)
+
+    def neighbors(self, string, current):
+        x, y = current
+        possible_neighbors = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        
+        # Filter valid neighbors based on track elements
+        valid_neighbors = [
+            (nx, ny) for nx, ny in possible_neighbors
+            if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
+        ]
+        print(f"valid neighbors: {valid_neighbors}")
+        return valid_neighbors
+
+    def cost(self, current, neighbor):
+        # Replace with your cost function
+        return math.dist(current, neighbor)

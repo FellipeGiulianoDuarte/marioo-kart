@@ -75,8 +75,8 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         rows = [row.strip() for row in rows if row.strip()]
 
         # Convert position indices to integers
-        position_y = int(x)
-        position_x = int(y)
+        position_y = int(y)
+        position_x = int(x)
 
         # Calculate row and column indices
         row_index = position_y // BLOCK_SIZE
