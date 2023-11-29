@@ -1,6 +1,9 @@
 import math
+import time
 import pygame
 from boost import Boost
+from grass import Grass
+from lava import Lava
 from road import Road
 from checkpoint import Checkpoint
 from heapq import heappush, heappop
@@ -14,6 +17,8 @@ class AI():
         self.kart = None
         self.graph = None
         self.checkpoints = None
+        self.current_path = None
+        self.path_index = 0
 
     def move(self, string):
         """
@@ -41,7 +46,7 @@ class AI():
 
             for col_index in range(len(row)):
                 track_char = row[col_index]
-                
+
                 if track_char == char:
                     break
             else:
@@ -49,14 +54,12 @@ class AI():
             break
 
         next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
-        print(next_checkpoint_position)
 
         # Use A* pathfinding to find the shortest path to the next checkpoint
         path = self.a_star(string, self.kart.position, next_checkpoint_position, self.h, self.neighbors)
         # Determine the angle and movement based on the path
         if path:
             next_point = path[1]
-            print(path[1])
             relative_x = next_point[0] - self.kart.position[0]
             relative_y = next_point[1] - self.kart.position[1]
             next_point_angle = math.atan2(relative_y, relative_x)
@@ -85,7 +88,7 @@ class AI():
                 current = cameFrom[current]
                 total_path.insert(0, current)
             return total_path
-        
+
         # The set of discovered nodes that may need to be (re-)expanded.
         # Initially, only the start node is known.
         # This is usually implemented as a min-heap or priority queue rather than a hash-set.
@@ -107,7 +110,9 @@ class AI():
             if tuple(current) == tuple(goal):
                 return reconstruct_path(cameFrom, tuple(current))
 
-            for neighbor in neighbors(string, current):
+            # Limit the number of neighbors to consider
+            max_neighbors = 100
+            for neighbor in neighbors(string, current)[:max_neighbors]:
                 tentative_gScore = gScore[tuple(current)] + 1
                 if tentative_gScore < gScore.get(tuple(neighbor), float('inf')):
                     # This path to neighbor is better than any previous one. Record it!
@@ -120,15 +125,32 @@ class AI():
         return None  # failure
 
     def h(self, current, goal):
-        return abs(int(current[0]) - int(goal[0])) + abs(int(current[1]) - int(goal[1]))
+        x1, y1 = current
+        x2, y2 = goal
+        return abs(x1 - x2) + abs(y1 - y2)
 
     def neighbors(self, string, current):
         x, y = current
-        possible_neighbors = [(int(x + 1), int(y)), (int(x - 1), int(y)), (int(x), int(y + 1)), (int(x), int(y - 1))]
-        
-        # Filter valid neighbors based on track elements
-        valid_neighbors = [
-            (nx, ny) for nx, ny in possible_neighbors
-            if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
+
+        possible_neighbors = [
+            (x + 1, y),
+            (x - 1, y),
+            (x, y + 1),
+            (x, y - 1),
+            (x + 1, y + 1),
+            (x - 1, y + 1),
+            (x + 1, y - 1),
+            (x - 1, y - 1)
         ]
+
+        # Filter valid neighbors based on track elements
+        valid_neighbors = []
+        for new_x, new_y in possible_neighbors:
+            track_element, _ = self.kart.get_track_element(string, new_x, new_y)
+            if track_element == Checkpoint or track_element == Road or track_element == Boost:
+                valid_neighbors.append((new_x, new_y))
+
+        for nx, ny in valid_neighbors:
+            track_element_class = self.kart.get_track_element(string, nx, ny)[0]
+            # print(f"Class of track element at ({nx}, {ny}): {track_element_class}")
         return valid_neighbors

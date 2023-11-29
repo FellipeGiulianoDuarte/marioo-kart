@@ -15,19 +15,19 @@ BACKGROUND_COLOR = (0, 0, 0)
 class Track(object):
     """
     Classe qui gere le deroulement et l'affichage d'une partie
-    
+
     ===================================== ATTENTION ====================================
-    
+
     VOUS NE DEVEZ PAS MODIFIER LA DEFINITION DE CETTE CLASSE
-    
-    VOUS DEVEZ TRAVAILLER SUR LES AUTRES FICHIERS ET VEILLER A CE 
+
+    VOUS DEVEZ TRAVAILLER SUR LES AUTRES FICHIERS ET VEILLER A CE
     QUE LE CODE QUE VOUS PRODUISEZ SOIT COMPATIBLE AVEC CETTE CLASSE
-    
+
     (vous pouvez eventuellement reorganiser les imports en haut, mais c'est tout)
-    
+
     ====================================================================================
     """
-    
+
     # Ce dictionnaire permet de donner la classe et les parametres d'instanciation
     # correspondant a chaque lettre dans la chaine de caractere decrivant le circuit
     char_to_track_element = {
@@ -64,7 +64,7 @@ class Track(object):
             'params': []
         }
     }
-    
+
     def __init__(self, string, initial_position, initial_angle):
         self.string = string  # La chaine de caractere decrivant le circuit
 
@@ -75,15 +75,15 @@ class Track(object):
         # Instanciation des objets composants le circuit
         # Au passage, on peut calculer les dimensions du circuit
         self.track_objects, self.width, self.height = self.parse_string(string)
-        
+
         # On instancie le kart controlle par le player
         self.__karts = []
-        
+
 
     @property
     def initial_position(self):
         return self.__initial_position
-    
+
     @property
     def initial_angle(self):
         return self.__initial_angle
@@ -151,7 +151,7 @@ class Track(object):
         # On appelle une methode qui doit replacer le kart a sa position initiale
         for kart in self.karts:
             kart.reset(self.initial_position, self.initial_angle)
-        
+
         # Boucle while pour le deroulement de la partie
         running = True
         compteur = 0
@@ -161,18 +161,18 @@ class Track(object):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                        
+
             # On efface tout sur l'ecran
             screen.fill(BACKGROUND_COLOR)
 
             # On dessine les elements du circuit
             for track_object in self.track_objects:
                 track_object.draw(screen)
-            
+
             for kart in self.karts:
                 # On recupere la commande du joueur (humain ou IA)
                 keys = kart.controller.move(self.string)
-            
+
                 if keys[pygame.K_UP]:
                     kart.forward()
                 if keys[pygame.K_DOWN]:
@@ -200,7 +200,7 @@ class Track(object):
             pygame.display.flip()
             #TODO: TIRAR ESSA PORRA
             # time.sleep(0.03)
-            
+
             # On incremente le compteur
             compteur += 1
 

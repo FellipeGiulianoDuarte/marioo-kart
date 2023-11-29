@@ -100,10 +100,9 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         delta_x = self.position[0] - self.last_position[0]
         delta_y = self.position[1] - self.last_position[1]
         self.last_speed = (delta_x, delta_y)
-        
+
         # Save the current position as the previous position
         self.last_position = self.position
-
         if track_class == Road:
             self.position = (self.calculate_x(0.02), self.calculate_y(0.02))
         elif track_class == Grass:
@@ -116,14 +115,14 @@ class Kart():  # Vous pouvez ajouter des classes parentes
             self.handle_checkpoint(track_params, string)
         elif track_class == Lava:
             self.handle_lava()
-        
+
         # Set to zero in case was not used
         self.current_acceleration = 0
 
     def handle_checkpoint(self, checkpoint_params, string):
         checkpoint_id = checkpoint_params[0]
         last_checkpoint_id = self.get_last_checkpoint_id(string)
-        
+
         if checkpoint_id == self.next_checkpoint_id:
             # Last checkpoint
             if checkpoint_id == last_checkpoint_id:
