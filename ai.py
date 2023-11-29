@@ -1,9 +1,6 @@
 import math
 import pygame
-from track import Track
 from boost import Boost
-from grass import Grass
-from lava import Lava
 from road import Road
 from checkpoint import Checkpoint
 from heapq import heappush, heappop
@@ -65,8 +62,8 @@ class AI():
         
         # Determine the angle and movement based on the path
         if path:
-            print(f"Relative Angle: {relative_angle}")
-            print(f"Command: {command}")
+            # print(f"Relative Angle: {relative_angle}")
+            # print(f"Command: {command}")
             # Calculate angle towards the next point in the path
             next_point = path[0]
             relative_x = next_point[0] - self.kart.position[0]
@@ -107,15 +104,15 @@ class AI():
             possible_neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
             valid_neighbors = [
                 (nx, ny) for nx, ny in possible_neighbors
-                if self.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
+                if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
             ]
 
-            print(f"Point: {point}, Possible Neighbors: {possible_neighbors}")
+            # print(f"Point: {point}, Possible Neighbors: {possible_neighbors}")
             for nx, ny in possible_neighbors:
-                track_class, _ = self.get_track_element(string, nx, ny)
-                print(f"Neighbor: ({nx}, {ny}), Track Class: {track_class}")
+                track_class, _ = self.kart.get_track_element(string, nx, ny)
+                # print(f"Neighbor: ({nx}, {ny}), Track Class: {track_class}")
 
-            print(f"Valid Neighbors: {valid_neighbors}")
+            # print(f"Valid Neighbors: {valid_neighbors}")
 
             return valid_neighbors
 
@@ -127,7 +124,7 @@ class AI():
         while open_set:
             current_cost, (current, came_from) = heappop(open_set)
             
-            print(f"Current: {current}, Goal: {goal}")
+            # print(f"Current: {current}, Goal: {goal}")
 
             if current == goal:
                 path = [current]
@@ -145,25 +142,3 @@ class AI():
                     heappush(open_set, (heuristic_cost, (neighbor, current)))
 
         return []
-    
-    def get_track_element(self, string, x, y):
-        rows = string.split('\n')
-        rows = [row.strip() for row in rows if row.strip()]
-
-        position_y = int(y)
-        position_x = int(x)
-
-        row_index = position_y // BLOCK_SIZE
-        col_index = position_x // BLOCK_SIZE
-
-        if 0 <= row_index < len(rows):
-            row = rows[row_index]
-
-            if 0 <= col_index < len(row):
-                track_char = row[col_index]
-                track_element = Track.char_to_track_element.get(track_char, None)
-                if track_element is not None:
-                    return track_element['class'], track_element.get('params', None)
-
-        # Outside of the track behaves like lava
-        return Track.char_to_track_element.get('L', {}).get('class', None), Track.char_to_track_element.get('L', {}).get('params', None)

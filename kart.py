@@ -70,13 +70,13 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         self.last_angle = self.angle
         self.angle += MAX_ANGLE_VELOCITY
 
-    def get_track_element(self, string):
+    def get_track_element(self, string, x, y):
         rows = string.split('\n')
         rows = [row.strip() for row in rows if row.strip()]
 
         # Convert position indices to integers
-        position_y = int(self.position[1])
-        position_x = int(self.position[0])
+        position_y = int(x)
+        position_x = int(y)
 
         # Calculate row and column indices
         row_index = position_y // BLOCK_SIZE
@@ -96,8 +96,7 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         return Track.char_to_track_element['L']['class'], Track.char_to_track_element['L'].get('params', None)
 
     def update_position(self, string, screen):
-        print(self.position)
-        track_class, track_params = self.get_track_element(string)
+        track_class, track_params = self.get_track_element(string, self.position[0], self.position[1])
         delta_x = self.position[0] - self.last_position[0]
         delta_y = self.position[1] - self.last_position[1]
         self.last_speed = (delta_x, delta_y)
