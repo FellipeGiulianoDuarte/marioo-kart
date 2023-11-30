@@ -1,4 +1,5 @@
 import math
+import heapq
 
 import pygame
 
@@ -65,8 +66,8 @@ class AI():
                 continue
             break
 
-        next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
-
+        next_checkpoint_position = [col_index * BLOCK_SIZE + .5 * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
+        print(next_checkpoint_position)
         next_move = self.get_minimum_valid_neighbor(string, self.kart.position[0], self.kart.position[1],
                                                     next_checkpoint_position[0], next_checkpoint_position[1])
 
@@ -106,7 +107,7 @@ class AI():
             tuple: The coordinates of the minimum valid neighbor position.
         """
         # when you increase this value, the kart performs better but slows the code, I recommend 30
-        degree_level = 50
+        degree_level = 30
         x, y = int(x), int(y)
         rows = len(string)
         cols = len(string[0])
@@ -119,18 +120,33 @@ class AI():
             if i != 0 or j != 0
         }
 
+
         # Use a generator expression for valid_neighbors
         valid_neighbors = (
             (nx, ny)
             for nx, ny in possible_neighbors
-            if self.kart.get_track_element(string, nx, ny)[0].__name__ in ("Road", "Boost", "Checkpoint")
+            if self.kart.get_track_element(string, nx, ny)[0].__name__ in ("Road", "Boost", "Checkpoint", "Grass")
         )
 
-        # Use min with a key function and provide a default value
-        min_valid_neighbor = min(
-            valid_neighbors,
-            default=None,
-            key=lambda neighbor: abs(neighbor[0] - c_x) + abs(neighbor[1] - c_y)
-        )
+        priority_queue = []
+        
+        for nx, ny in valid_neighbors:
+            cost = self.calculate_cost(string, nx, ny, c_x, c_y)
+            heapq.heappush(priority_queue, (cost, (nx, ny)))
+
+        # Pop the minimum cost neighbor from the priority queue
+        min_valid_neighbor = heapq.heappop(priority_queue)[1]
 
         return min_valid_neighbor
+
+    def calculate_cost(self, string, nx, ny, c_x, c_y):
+        # Calculate the cost based on the track element and distance to the checkpoint
+        track_element = self.kart.get_track_element(string, nx, ny)[0].__name__
+        distance_to_checkpoint = abs(nx - c_x) + abs(ny - c_y)
+
+        if track_element in ("Road", "Boost", "Checkpoint"):
+            # Add 1 for road, boost, and checkpoint
+            return 1 + distance_to_checkpoint
+        elif track_element == "Grass":
+            # Add 100 for grass and distance to checkpoint
+            return 100 + distance_to_checkpoint
