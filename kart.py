@@ -1,5 +1,10 @@
 import math
+
 import pygame
+
+from kartPhysics import KartPhysics
+from raceEventHandler import RaceEventHandler
+
 from track import Track
 from boost import Boost
 from grass import Grass
@@ -14,7 +19,7 @@ KART_RADIUS = 20
 BOOST_VELOCITY = 25
 
 
-class Kart():  # Vous pouvez ajouter des classes parentes
+class Kart(KartPhysics, RaceEventHandler):
     """
     Class implementing the display and physics of the kart in the game.
 
@@ -35,9 +40,12 @@ class Kart():  # Vous pouvez ajouter des classes parentes
     """
 
     def __init__(self, controller):
+        super().__init__()
         self.has_finished = False
         self.controller = controller
         self.controller.kart = self
+
+        self.next_checkpoint_id = 0
 
         self.position = (0, 0)
         self.last_position = (0, 0)
@@ -45,17 +53,8 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         self.start_position = (0, 0)
         self.start_orientation = 0
 
-        self.last_speed = (0, 0)
-
         self.angle = 0
         self.last_angle = 0
-
-        self.current_acceleration = 0
-
-        self.next_checkpoint_id = 0
-
-        self.orientation_from_checkpoint = 0
-        self.position_from_checkpoint = (0, 0)
 
     def reset(self, initial_position, initial_orientation):
         """
@@ -140,86 +139,6 @@ class Kart():  # Vous pouvez ajouter des classes parentes
 
         # Set to zero in case was not used
         self.current_acceleration = 0
-
-    def handle_checkpoint(self, checkpoint_params, string):
-        checkpoint_id = checkpoint_params[0]
-        last_checkpoint_id = self.get_last_checkpoint_id(string)
-
-        if checkpoint_id == self.next_checkpoint_id:
-            # Last checkpoint
-            if checkpoint_id == last_checkpoint_id:
-                self.has_finished = True
-                return
-
-            # Save the checkpoint, but this is not the last one
-            self.position_from_checkpoint = self.position
-            self.orientation_from_checkpoint = self.angle
-            self.next_checkpoint_id += 1
-
-    def handle_lava(self):
-        # Reset from the last checkpoint
-        self.last_position = self.position_from_checkpoint
-        self.position = self.position_from_checkpoint
-        self.last_angle = self.orientation_from_checkpoint
-        self.angle = self.orientation_from_checkpoint
-
-    # Returns last checkpoint ID on the track
-    def get_last_checkpoint_id(self, string):
-        letters = {'C', 'D', 'E', 'F'}
-        count = 0
-        seen_letters = set()
-
-        for char in string:
-            if char in letters and char not in seen_letters:
-                count += 1
-                seen_letters.add(char)
-
-        return count - 1
-
-    # formula 1 0v(t − 1) = arctan (Vy(t-1)/Vx(t-1))
-    def update_angle(self):
-        return math.atan2(self.last_speed[1], self.last_speed[0])
-
-    # formula 2 |v(t − 1)| = q Vx(t − 1)2 + vy(t − 1)2
-    def update_speed(self):
-        return math.sqrt(self.last_speed[0] ** 2 + self.last_speed[1] ** 2)
-
-    # formula 3 a(t) = ac(t) − f ∗ |v(t − 1)| ∗ cos(0(t) - 0v(t-1))
-    def calculate_current_acceleration(self, friction):
-        last_speed = self.update_speed()
-        prev_angle = self.update_angle()
-        current_accel = self.current_acceleration - friction * last_speed * math.cos(self.angle - prev_angle)
-        return current_accel
-
-    # formula 4 v(t) = a(t) + v(t − 1)
-    def calculate_current_speed(self, friction):
-        last_speed = self.update_speed()
-        current_acceleration = self.calculate_current_acceleration(friction)
-        return current_acceleration + last_speed
-
-    # formula 7 x(t) = x(t − 1) + vx(t)
-    def calculate_x(self, friction, velocity=None):
-        if velocity is None:
-            current_speed = self.calculate_current_speed(friction)
-        else:
-            current_speed = velocity
-
-        speed_x = current_speed * math.cos(self.angle)
-
-        self.last_speed = (speed_x, self.last_speed[1])
-        return self.last_position[0] + speed_x
-
-    # formula 8 y(t) = y(t − 1) + vy(t)
-    def calculate_y(self, friction, velocity=None):
-        if velocity is None:
-            current_speed = self.calculate_current_speed(friction)
-        else:
-            current_speed = velocity
-
-        speed_y = current_speed * math.sin(self.angle)
-
-        self.last_speed = (self.last_speed[0], speed_y)
-        return self.last_position[1] + speed_y
 
     def draw(self, screen):
         kart_position = [self.position[0], self.position[1]]

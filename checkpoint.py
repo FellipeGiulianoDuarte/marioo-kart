@@ -1,12 +1,7 @@
-import pygame
-
-BLOCK_SIZE = 50
+from trackElement import TrackElement
 
 
-class Checkpoint():
+class Checkpoint(TrackElement):
 
     def __init__(self, x, y, checkpoint_id):
-        self.rect = pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
-
-    def draw(self, screen):
-        pygame.draw.rect(screen, (128, 128, 128), self.rect)
+        super().__init__(x, y, (128, 128, 128))
