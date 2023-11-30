@@ -1,6 +1,7 @@
 import time
 import pygame
 
+
 class Human():
 
     def __init__(self):

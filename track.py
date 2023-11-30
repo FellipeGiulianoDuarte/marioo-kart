@@ -4,9 +4,6 @@ from boost import Boost
 from lava import Lava
 from road import Road
 
-#TODO: TIRAR ESSA PORRA
-import time
-
 import pygame
 
 BLOCK_SIZE = 50
@@ -198,8 +195,6 @@ class Track(object):
 
             # On met a jour l'affichage de pygame
             pygame.display.flip()
-            #TODO: TIRAR ESSA PORRA
-            # time.sleep(0.03)
 
             # On incremente le compteur
             compteur += 1

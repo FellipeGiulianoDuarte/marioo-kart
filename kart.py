@@ -16,7 +16,22 @@ BOOST_VELOCITY = 25
 
 class Kart():  # Vous pouvez ajouter des classes parentes
     """
-    Classe implementant l'affichage et la physique du kart dans le jeu
+    Class implementing the display and physics of the kart in the game.
+
+    Attributes:
+        has_finished (bool): Flag indicating whether the kart has finished the race.
+        controller: The controller object associated with the kart.
+        position (tuple): Current position of the kart (x, y).
+        last_position (tuple): Previous position of the kart (x, y).
+        start_position (tuple): Initial position of the kart.
+        start_orientation (float): Initial orientation of the kart.
+        last_speed (tuple): Last recorded speed of the kart (delta_x, delta_y).
+        angle (float): Current orientation angle of the kart.
+        last_angle (float): Previous orientation angle of the kart.
+        current_acceleration (float): Current acceleration of the kart.
+        next_checkpoint_id (int): ID of the next checkpoint the kart should pass.
+        orientation_from_checkpoint (float): Orientation angle recorded at the last checkpoint.
+        position_from_checkpoint (tuple): Position recorded at the last checkpoint.
     """
 
     def __init__(self, controller):
@@ -43,6 +58,13 @@ class Kart():  # Vous pouvez ajouter des classes parentes
         self.position_from_checkpoint = (0, 0)
 
     def reset(self, initial_position, initial_orientation):
+        """
+        Reset the kart to the specified initial position and orientation.
+
+        Args:
+            initial_position (tuple): The initial position of the kart (x, y).
+            initial_orientation (float): The initial orientation angle of the kart.
+        """
         self.last_position = initial_position
         self.position = initial_position
 
@@ -92,7 +114,7 @@ class Kart():  # Vous pouvez ajouter des classes parentes
                 if track_element is not None:
                     return track_element['class'], track_element.get('params', None)
 
-        # Outside of the track behaves like lava
+        # Outside the track behaves like lava
         return Track.char_to_track_element['L']['class'], Track.char_to_track_element['L'].get('params', None)
 
     def update_position(self, string, screen):

@@ -1,19 +1,31 @@
 import math
-import time
+
 import pygame
+
 from boost import Boost
-from grass import Grass
-from lava import Lava
-from road import Road
 from checkpoint import Checkpoint
-from heapq import heappush, heappop
+from road import Road
 
 MAX_ANGLE_VELOCITY = 0.05
 BLOCK_SIZE = 50
 
+
 class AI():
+    """
+    A simple AI class for controlling a kart in a racing game.
+
+    Attributes:
+        kart: The kart object controlled by the AI.
+        graph: The graph representing the track.
+        checkpoints: The checkpoints on the track.
+        current_path: The current path the kart is following.
+        path_index: The index of the current position in the path.
+    """
 
     def __init__(self):
+        """
+        Initialize the AI with default values.
+        """
         self.kart = None
         self.graph = None
         self.checkpoints = None
@@ -22,13 +34,17 @@ class AI():
 
     def move(self, string):
         """
-        The AI uses A* pathfinding to navigate around obstacles (lava and grass) and reach checkpoints.
+        Move the kart based on the current track information.
 
-        :param string: The string describing the track
-        :returns: A dictionary of keys (UP, DOWN, LEFT, RIGHT) and corresponding boolean values
+        Args:
+            string (str): The string describing the track.
+
+        Returns:
+            dict: A dictionary of keys (UP, DOWN, LEFT, RIGHT) and corresponding boolean values.
         """
 
         # Find the position of the next checkpoint
+        global char, col_index, row_index
         if self.kart.next_checkpoint_id == 0:
             char = 'C'
         elif self.kart.next_checkpoint_id == 1:
@@ -55,7 +71,8 @@ class AI():
 
         next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
 
-        next_move = self.get_minimum_valid_neighbor(string, self.kart.position[0], self.kart.position[1], next_checkpoint_position[0], next_checkpoint_position[1])
+        next_move = self.get_minimum_valid_neighbor(string, self.kart.position[0], self.kart.position[1],
+                                                    next_checkpoint_position[0], next_checkpoint_position[1])
 
         if next_move:
             next_point = next_move
@@ -75,10 +92,25 @@ class AI():
             key_list = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
             keys = {key: command[i] for i, key in enumerate(key_list)}
             return keys
+        else:
+            return {pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False}
 
     def get_minimum_valid_neighbor(self, string, x, y, c_x, c_y):
-        # when you increase this value, the kart performs better but slows the code, i recommend 25
-        degree_level = 25
+        """
+        Get the minimum valid neighbor position based on the current kart position and checkpoint position.
+
+        Args:
+            string (str): The string describing the track.
+            x (float): The x-coordinate of the kart position.
+            y (float): The y-coordinate of the kart position.
+            c_x (float): The x-coordinate of the checkpoint position.
+            c_y (float): The y-coordinate of the checkpoint position.
+
+        Returns:
+            tuple: The coordinates of the minimum valid neighbor position.
+        """
+        # when you increase this value, the kart performs better but slows the code, I recommend 25
+        degree_level = 50
         x, y = int(x), int(y)
         rows = len(string)
         cols = len(string[0])
@@ -106,5 +138,3 @@ class AI():
         )
 
         return min_valid_neighbor
-
-
