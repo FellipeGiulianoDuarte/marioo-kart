@@ -6,11 +6,6 @@ from kartPhysics import KartPhysics
 from raceEventHandler import RaceEventHandler
 
 from track import Track
-from boost import Boost
-from grass import Grass
-from lava import Lava
-from road import Road
-from checkpoint import Checkpoint
 
 MAX_ANGLE_VELOCITY = 0.05
 MAX_ACCELERATION = 0.25
@@ -124,17 +119,17 @@ class Kart(KartPhysics, RaceEventHandler):
 
         # Save the current position as the previous position
         self.last_position = self.position
-        if track_class == Road:
+        if track_class.__name__ == "Road":
             self.position = (self.calculate_x(0.02), self.calculate_y(0.02))
-        elif track_class == Grass:
+        elif track_class.__name__ == "Grass":
             self.position = (self.calculate_x(0.2), self.calculate_y(0.2))
-        elif track_class == Boost:
+        elif track_class.__name__ == "Boost":
             # Set velocity to 25 in formulas 3 and 4 for Boost
             self.position = (self.calculate_x(0.02, velocity=BOOST_VELOCITY), self.calculate_y(0.02, velocity=BOOST_VELOCITY))
-        elif track_class == Checkpoint:
+        elif track_class.__name__ == "Checkpoint":
             self.position = (self.calculate_x(0.02), self.calculate_y(0.02))
             self.handle_checkpoint(track_params, string)
-        elif track_class == Lava:
+        elif track_class.__name__ == "Lava":
             self.handle_lava()
 
         # Set to zero in case was not used

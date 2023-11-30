@@ -2,10 +2,6 @@ import math
 
 import pygame
 
-from boost import Boost
-from checkpoint import Checkpoint
-from road import Road
-
 MAX_ANGLE_VELOCITY = 0.05
 BLOCK_SIZE = 50
 
@@ -109,7 +105,7 @@ class AI():
         Returns:
             tuple: The coordinates of the minimum valid neighbor position.
         """
-        # when you increase this value, the kart performs better but slows the code, I recommend 25
+        # when you increase this value, the kart performs better but slows the code, I recommend 30
         degree_level = 50
         x, y = int(x), int(y)
         rows = len(string)
@@ -127,7 +123,7 @@ class AI():
         valid_neighbors = (
             (nx, ny)
             for nx, ny in possible_neighbors
-            if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
+            if self.kart.get_track_element(string, nx, ny)[0].__name__ in ("Road", "Boost", "Checkpoint")
         )
 
         # Use min with a key function and provide a default value
