@@ -55,11 +55,10 @@ class AI():
 
         next_checkpoint_position = [col_index * BLOCK_SIZE, row_index * BLOCK_SIZE + .5 * BLOCK_SIZE]
 
-        # Use A* pathfinding to find the shortest path to the next checkpoint
-        path = self.a_star(string, self.kart.position, next_checkpoint_position, self.h, self.neighbors)
-        # Determine the angle and movement based on the path
-        if path:
-            next_point = path[1]
+        next_move = self.get_minimum_valid_neighbor(string, self.kart.position[0], self.kart.position[1], next_checkpoint_position[0], next_checkpoint_position[1])
+
+        if next_move:
+            next_point = next_move
             relative_x = next_point[0] - self.kart.position[0]
             relative_y = next_point[1] - self.kart.position[1]
             next_point_angle = math.atan2(relative_y, relative_x)
@@ -76,64 +75,36 @@ class AI():
             key_list = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
             keys = {key: command[i] for i, key in enumerate(key_list)}
             return keys
-        else:
-            # If no path is found, stop moving
-            return {pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False}
 
+    def get_minimum_valid_neighbor(self, string, x, y, c_x, c_y):
+        # when you increase this value, the kart performs better but slows the code, i recommend 25
+        degree_level = 25
+        x, y = int(x), int(y)
+        rows = len(string)
+        cols = len(string[0])
 
-    def a_star(self, string, start, goal, h, neighbors):
-        def reconstruct_path(cameFrom, current):
-            total_path = [current]
-            while current in cameFrom:
-                current = cameFrom[current]
-                total_path.insert(0, current)
-            return total_path
+        # Use a set for possible_neighbors
+        possible_neighbors = {
+            (int(x + i), int(y + j))
+            for i in range(-degree_level, degree_level + 1)
+            for j in range(-degree_level, degree_level + 1)
+            if i != 0 or j != 0
+        }
 
-        # The set of discovered nodes that may need to be (re-)expanded.
-        # Initially, only the start node is known.
-        # This is usually implemented as a min-heap or priority queue rather than a hash-set.
-        openSet = [(0, start)]
-
-        # For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from the start
-        # to n currently known.
-        cameFrom = {}
-
-        # For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
-        gScore = {tuple(start): 0}
-
-        # For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
-        # how cheap a path could be from start to finish if it goes through n.
-        fScore = {tuple(start): h(start, goal)}
-
-        while openSet:
-            _, current = heappop(openSet)
-            if tuple(current) == tuple(goal):
-                return reconstruct_path(cameFrom, tuple(current))
-
-            for neighbor in neighbors(string, current):
-                tentative_gScore = gScore[tuple(current)] + 1
-                if tentative_gScore < gScore.get(tuple(neighbor), float('inf')):
-                    # This path to neighbor is better than any previous one. Record it!
-                    cameFrom[tuple(neighbor)] = tuple(current)
-                    gScore[tuple(neighbor)] = tentative_gScore
-                    fScore[tuple(neighbor)] = tentative_gScore + h(neighbor, goal)
-                    heappush(openSet, (fScore[tuple(neighbor)], tuple(neighbor)))
-
-        # Open set is empty but goal was never reached
-        return None  # failure
-
-    def h(self, current, goal):
-        x1, y1 = current
-        x2, y2 = goal
-        return abs(x1 - x2) + abs(y1 - y2)
-
-    def neighbors(self, string, current):
-        x, y = current
-        possible_neighbors = [(int(x + 1), int(y)), (int(x - 1), int(y)), (int(x), int(y + 1)), (int(x), int(y - 1))]
-
-        # Filter valid neighbors based on track elements
-        valid_neighbors = [
-            (nx, ny) for nx, ny in possible_neighbors
+        # Use a generator expression for valid_neighbors
+        valid_neighbors = (
+            (nx, ny)
+            for nx, ny in possible_neighbors
             if self.kart.get_track_element(string, nx, ny)[0] in (Road, Boost, Checkpoint)
-        ]
-        return valid_neighbors
+        )
+
+        # Use min with a key function and provide a default value
+        min_valid_neighbor = min(
+            valid_neighbors,
+            default=None,
+            key=lambda neighbor: abs(neighbor[0] - c_x) + abs(neighbor[1] - c_y)
+        )
+
+        return min_valid_neighbor
+
+
