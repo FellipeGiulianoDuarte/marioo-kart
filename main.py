@@ -3,8 +3,9 @@ from ai import AI
 from human import Human
 from kart import Kart
 
-# La chaine de caractere decrivant le terrain
-string = """GGGGGGGGGGGGGGGGGGGGGGGGGG
+BLOCK_SIZE = 50
+
+track =  """GGGGGGGGGGGGGGGGGGGGGGGGGG
             GRRRRRRCRRRRRRRRRBRRRRRRRG
             GRRRRRRCRRRRRRRRRBRRRRRRRG
             GRRRRRRCRRRRRRRRRRRRRRRRRG
@@ -21,17 +22,17 @@ string = """GGGGGGGGGGGGGGGGGGGGGGGGGG
             GLLRRRERRRRRGGBRRRRRRRRRRG
             GGGGGGGGGGGGGGGGGGGGGGGGGG"""
 
-# La position et l'orientation initiale du kart
-initial_position = [75, 75]
-initial_angle = 0
+kart_initial_position = [75, 75]
+kart_initial_angle = 0
 
 controller = AI()  # ou AI()
 """
 ==================== ATTENTION =====================
-Vous ne devez pas modifier ces quatre lignes de code
+In the original requirement, the lines of code below
+were indicated not to be changed.
 ====================================================
 """
 kart = Kart(controller)
-track = Track(string, initial_position, initial_angle)
+track = Track(track, kart_initial_position, kart_initial_angle)
 track.add_kart(kart)
 track.play()
