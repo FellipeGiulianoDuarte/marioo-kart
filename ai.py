@@ -131,6 +131,10 @@ class AI():
 
         return combined_heuristic
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 85c0f676685f51182983c773c2eb11ea83ce4036
     def neighbors(self, string, current):
         x, y = current
         possible_neighbors = [
