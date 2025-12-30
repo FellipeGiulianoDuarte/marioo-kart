@@ -237,14 +237,18 @@ class GeneralistTrainer:
             self.axes[1, 0].set_ylim([0, 105])
             self.axes[1, 0].grid(True)
 
-        # Plot 4: Per-track fitness
+        # Plot 4: Per-track fitness (com suporte a curriculum learning)
         colors_plot = ['red', 'blue', 'green', 'orange', 'purple']
         for idx, track_id in enumerate(self.available_tracks):
             if track_id in self.metrics['best_fitness_per_track']:
-                color = colors_plot[idx % len(colors_plot)]
-                self.axes[1, 1].plot(generations,
-                                    self.metrics['best_fitness_per_track'][track_id],
-                                    color=color, linewidth=2, label=track_id)
+                track_fitness = self.metrics['best_fitness_per_track'][track_id]
+                if track_fitness:  # Se tem dados para esta pista
+                    # Gerar x-axis apenas para as gerações que têm dados desta pista
+                    track_generations = list(range(len(generations) - len(track_fitness) + 1, len(generations) + 1))
+                    color = colors_plot[idx % len(colors_plot)]
+                    self.axes[1, 1].plot(track_generations,
+                                        track_fitness,
+                                        color=color, linewidth=2, label=track_id)
 
         self.axes[1, 1].set_title('Best Fitness por Pista')
         self.axes[1, 1].set_xlabel('Geração')
@@ -285,13 +289,31 @@ class GeneralistTrainer:
                 accumulated_results[i]['fitness'] += result['fitness']
                 accumulated_results[i]['track_results'][track_id] = result['track_result']
 
-        # Converter para formato esperado e calcular média de fitness
+        # Converter para formato esperado e calcular FITNESS MULTIPLICATIVO
+        # Usando média geométrica: força modelo a ser BOM em TODAS as pistas
+        # (f1 * f2 * f3)^(1/3) - penaliza falhas, recompensa consistência
         final_results = []
         for i in range(len(population)):
-            avg_fitness = accumulated_results[i]['fitness'] / len(self.available_tracks)
+            # Coletar fitness de cada pista (normalizado para positivo)
+            fitness_values = []
+            for track_id in self.available_tracks:
+                track_fitness = accumulated_results[i]['track_results'][track_id]['fitness']
+                # Normalizar para positivo (somar offset para evitar valores negativos/zero)
+                normalized_fitness = max(0, track_fitness + 50000)  # Offset para garantir positivo
+                fitness_values.append(normalized_fitness)
+
+            # Média geométrica
+            product = 1.0
+            for f in fitness_values:
+                product *= f
+            geometric_mean = product ** (1.0 / len(fitness_values))
+
+            # Remover offset
+            final_fitness = geometric_mean - 50000
+
             final_results.append({
                 'controller': population[i],
-                'fitness': avg_fitness,
+                'fitness': final_fitness,
                 'track_results': accumulated_results[i]['track_results']
             })
 
@@ -848,6 +870,25 @@ class GeneralistTrainer:
         print(f"GERAÇÃO {generation_num + 1}/{self.generations}")
         print(f"{'='*70}")
 
+        # CURRICULUM LEARNING: Adicionar pistas gradualmente
+        # Gen 1-100: Só pista1 (dominar a básica)
+        # Gen 101-200: pista1 + pista_retangular (adicionar complexidade)
+        # Gen 201+: Todas as 3 pistas (generalista completo)
+        original_tracks = self.available_tracks.copy()
+
+        if generation_num < 100:
+            # Fase 1: Dominar pista básica
+            self.available_tracks = [t for t in original_tracks if t == 'pista1']
+            print(f"📚 CURRICULUM Fase 1: Dominando pista básica ({len(self.available_tracks)} pista)")
+        elif generation_num < 200:
+            # Fase 2: Adicionar pista retangular
+            self.available_tracks = [t for t in original_tracks if t in ['pista1', 'pista_retangular']]
+            print(f"📚 CURRICULUM Fase 2: Adicionando complexidade ({len(self.available_tracks)} pistas)")
+        else:
+            # Fase 3: Todas as pistas
+            self.available_tracks = original_tracks
+            print(f"📚 CURRICULUM Fase 3: Generalista completo ({len(self.available_tracks)} pistas)")
+
         # Se visual mode, inicializar pygame/screen uma vez
         if self.visual_mode:
             if self.screen is None:
@@ -901,7 +942,18 @@ class GeneralistTrainer:
         for track_id in self.available_tracks:
             completions = sum(1 for r in results if r['track_results'][track_id]['completed'])
             rate = (completions / len(results)) * 100
-            print(f"\n  {track_id}: {completions}/{len(results)} completaram ({rate:.1f}%)")
+
+            # Encontrar melhor resultado (menor steps entre os que completaram, ou melhor fitness)
+            completed_on_track = [r for r in results if r['track_results'][track_id]['completed']]
+            if completed_on_track:
+                best_on_track = min(completed_on_track, key=lambda r: r['track_results'][track_id]['steps'])
+                best_steps = best_on_track['track_results'][track_id]['steps']
+                astar_bench = config.TRACKS[track_id]['astar_benchmark']
+                efficiency = (astar_bench / best_steps * 100) if best_steps > 0 else 0
+                print(f"\n  {track_id}: {completions}/{len(results)} completaram ({rate:.1f}%) | Melhor: {best_steps} passos ({efficiency:.1f}% vs A*)")
+            else:
+                print(f"\n  {track_id}: {completions}/{len(results)} completaram ({rate:.1f}%) | Nenhum completou")
+
             total_completions += completions
             total_attempts += len(results)
 
@@ -967,6 +1019,9 @@ class GeneralistTrainer:
 
         # Atualizar gráficos em tempo real
         self._update_live_plot()
+
+        # Restaurar pistas originais
+        self.available_tracks = original_tracks
 
         return new_population
 
