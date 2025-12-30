@@ -2,7 +2,7 @@ import math
 
 MAX_ANGLE_VELOCITY = 0.05
 MAX_ACCELERATION = 0.25
-BOOST_VELOCITY = 25
+BOOST_VELOCITY = 15
 
 class KartPhysics:
     def __init__(self):

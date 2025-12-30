@@ -1,8 +1,8 @@
-from grass import Grass
-from checkpoint import Checkpoint
-from boost import Boost
-from lava import Lava
-from road import Road
+from game.elements.grass import Grass
+from game.elements.checkpoint import Checkpoint
+from game.elements.boost import Boost
+from game.elements.lava import Lava
+from game.elements.road import Road
 
 import pygame
 

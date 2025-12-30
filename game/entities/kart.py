@@ -1,22 +1,22 @@
 import math
 import pygame
 
-from boost import Boost
-from checkpoint import Checkpoint
-from grass import Grass
-from lava import Lava
-from road import Road
-from track import Track
+from game.elements.boost import Boost
+from game.elements.checkpoint import Checkpoint
+from game.elements.grass import Grass
+from game.elements.lava import Lava
+from game.elements.road import Road
+from game.entities.track import Track
 
-from kartPhysics import KartPhysics
-from raceEventHandler import RaceEventHandler
+from game.entities.kartPhysics import KartPhysics
+from game.entities.raceEventHandler import RaceEventHandler
 
 
 MAX_ANGLE_VELOCITY = 0.05
 MAX_ACCELERATION = 0.25
 BLOCK_SIZE = 50
 KART_RADIUS = 20
-BOOST_VELOCITY = 25
+BOOST_VELOCITY = 15
 
 
 class Kart(KartPhysics, RaceEventHandler):

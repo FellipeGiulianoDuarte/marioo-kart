@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+.claude/
+CLAUDE.md
+
+# RL Training outputs
+rl/models/*.pth
+metrics/*.png
+metrics/*.json
+
+# OS
+.DS_Store
+Thumbs.db

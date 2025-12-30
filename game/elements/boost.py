@@ -1,4 +1,4 @@
-from trackElement import TrackElement
+from game.elements.trackElement import TrackElement
 
 
 class Boost(TrackElement):

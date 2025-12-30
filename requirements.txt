@@ -1,0 +1,12 @@
+# Game Engine
+pygame>=2.6.0
+
+# Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Numerical Computing
+numpy>=1.23.0
+
+# Visualization
+matplotlib>=3.5.0
